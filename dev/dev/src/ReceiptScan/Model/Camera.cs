@@ -6,10 +6,13 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Security.Permissions;
 using System.Text;
+using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace ReceiptScan.Model
 {
@@ -18,9 +21,16 @@ namespace ReceiptScan.Model
 	/// </summary>
 	public class Camera
 	{
+		#region Private fields and constants
+		/// <summary>
+		/// Object of video capturing from camera
+		/// </summary>
 		protected VideoCapture capture;
-		protected Window window;
 
+		protected DispatcherTimer cameraTimer;
+		#endregion
+
+		#region Constructors and the finalizer
 		/// <summary>
 		/// Default constructor.
 		/// </summary>
@@ -28,6 +38,8 @@ namespace ReceiptScan.Model
 		{
 			this.capture = new VideoCapture();
 			capture.Open(0);
+
+			this.cameraTimer = null;
 		}
 
 		/// <summary>
@@ -43,6 +55,59 @@ namespace ReceiptScan.Model
 			capture.FrameWidth = width;
 			capture.FrameHeight = height;
 			capture.Fps = fps;
+
+			this.cameraTimer = null;
+		}
+		#endregion
+
+		#region Events
+		/// <summary>
+		/// Camera update event.
+		/// </summary>
+		public event CameraDataUpdateHandler CameraDataUpdateEvent;
+
+		/// <summary>
+		/// Camera event handler.
+		/// </summary>
+		/// <param name="sender"></param>
+		/// <param name="e"></param>
+		public delegate void CameraDataUpdateHandler(object sender, EventArgs e);
+		#endregion
+
+		#region Public properties
+		/// <summary>
+		/// Get the state a value indicates whether the timer is running or not.
+		/// </summary>
+		public bool IsEnabled
+		{
+			get
+			{
+				try
+				{
+					return this.cameraTimer.IsEnabled;
+				}
+				catch (Exception)
+				{
+					return false;
+				}
+			}
+		}
+		#endregion
+
+		#region Other methods and private properties in calling order
+		/// <summary>
+		/// Start camera.
+		/// </summary>
+		public void Start()
+		{
+			if (null == this.cameraTimer)
+			{
+				int interval = (int)Math.Round((decimal)1000 / Convert.ToInt32(this.capture.Fps));
+				this.cameraTimer = new DispatcherTimer();
+				this.cameraTimer.Interval = new TimeSpan(0, 0, 0, 0, interval);
+				cameraTimer.Tick += new EventHandler(this.CameraTimerDispatcher);
+			}
+			this.cameraTimer.Start();
 		}
 
 		/// <summary>
@@ -80,5 +145,60 @@ namespace ReceiptScan.Model
 				return bitMapImage;
 			}
 		}
+
+		/// <summary>
+		/// Stop camera.
+		/// </summary>
+		public void Stop()
+		{
+			if (this.cameraTimer.IsEnabled)
+			{
+				this.cameraTimer.Stop();
+			}
+		}
+
+		/// <summary>
+		/// Callbakc method when the timer dispatched.
+		/// </summary>
+		/// <param name="sender">Event dispatcher.</param>
+		/// <param name="e">Event args.</param>
+		public void CameraTimerDispatcher(object sender, EventArgs e)
+		{
+			var newImgSource = this.Read();
+			this.CameraDataUpdateEvent?.Invoke(this, new CameraEventArags(newImgSource));
+		}
+		#endregion
+	}
+
+	/// <summary>
+	/// Event args of camera.
+	/// </summary>
+	public class CameraEventArags : EventArgs
+	{
+		#region Constructors and the finalizer
+		/// <summary>
+		/// Default constructor.
+		/// </summary>
+		public CameraEventArags()
+		{
+			this.ImgSource = null;
+		}
+
+		/// <summary>
+		/// Constructor.
+		/// </summary>
+		/// <param name="imgSource">Image of camera to notify receiver.</param>
+		public CameraEventArags(ImageSource imgSource)
+		{
+			this.ImgSource = imgSource;
+		}
+		#endregion
+
+		#region Public properties
+		/// <summary>
+		/// Property of image.
+		/// </summary>
+		public ImageSource ImgSource { get; set; }
+		#endregion
 	}
 }

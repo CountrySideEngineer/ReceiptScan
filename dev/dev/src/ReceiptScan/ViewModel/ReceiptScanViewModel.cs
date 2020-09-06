@@ -32,11 +32,6 @@ namespace ReceiptScan.ViewModel
 		protected DelegateCommand cameraCommand;
 
 		/// <summary>
-		/// State of camera, running or stop.
-		/// </summary>
-		protected bool isCameraRunning;
-
-		/// <summary>
 		/// Content of button to start and stop camera.
 		/// </summary>
 		protected string buttonContent; 
@@ -45,11 +40,6 @@ namespace ReceiptScan.ViewModel
 		/// Timer to update camera view.
 		/// </summary>
 		protected DispatcherTimer cameraTimer;
-
-		/// <summary>
-		/// FPS of camera.
-		/// </summary>
-		protected int fps;
 		#endregion
 
 		#region Constructors and the finalizer
@@ -58,17 +48,10 @@ namespace ReceiptScan.ViewModel
 		/// </summary>
 		public ReceiptScanViewModel()
 		{
-			this.fps = 30;
-
 			this.MyCamera = new Camera(1280, 720);
-
-			this.cameraTimer = new DispatcherTimer();
-			int interval = (int)Math.Round((decimal)1000 / fps);
-			cameraTimer.Interval = new TimeSpan(0, 0, 0, 0, interval);
-			cameraTimer.Tick += new EventHandler(this.TimerEvent);
+			this.MyCamera.CameraDataUpdateEvent += this.TimerEvent;
 
 			this.buttonContent = "Start";
-			this.isCameraRunning = false;
 		}
 		#endregion
 
@@ -142,21 +125,15 @@ namespace ReceiptScan.ViewModel
 		/// </summary>
 		public void CameraCommandExecute()
 		{
-			if (this.isCameraRunning)
+			if (this.MyCamera.IsEnabled)
 			{
-				this.cameraTimer.Stop();
+				this.MyCamera.Start();
 				this.ButtonContent = "Start";
-				this.isCameraRunning = false;
-			}
-			else if (!this.isCameraRunning)
-			{
-				this.cameraTimer.Start();
-				this.ButtonContent = "Stop";
-				this.isCameraRunning = true;
 			}
 			else
 			{
-				//This code must be unreachable.
+				this.MyCamera.Start();
+				this.ButtonContent = "Stop";
 			}
 		}
 		#endregion
