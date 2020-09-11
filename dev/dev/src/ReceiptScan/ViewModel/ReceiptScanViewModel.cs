@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Security.Policy;
+using System.Security.RightsManagement;
 using System.Text;
 using System.Threading;
 using System.Windows.Media;
@@ -48,7 +49,7 @@ namespace ReceiptScan.ViewModel
 		/// </summary>
 		public ReceiptScanViewModel()
 		{
-			this.MyCamera = new Camera(1280, 720);
+			this.MyCamera = new Camera(640, 360);
 			this.MyCamera.CameraDataUpdateEvent += this.TimerEvent;
 
 			this.buttonContent = "Start";
@@ -127,13 +128,21 @@ namespace ReceiptScan.ViewModel
 		{
 			if (this.MyCamera.IsEnabled)
 			{
-				this.MyCamera.Start();
+				this.MyCamera.Stop();
 				this.ButtonContent = "Start";
+				this.ImgSource = null;
 			}
 			else
 			{
-				this.MyCamera.Start();
-				this.ButtonContent = "Stop";
+				try
+				{
+					this.MyCamera.Start();
+					this.ButtonContent = "Stop";
+				}
+				catch (InvalidOperationException)
+				{
+					this.NotifyNg?.Invoke("Camera can not start.", "CameraError");
+				}
 			}
 		}
 		#endregion
