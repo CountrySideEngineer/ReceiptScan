@@ -7,6 +7,7 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Security.Permissions;
+using System.Security.RightsManagement;
 using System.Text;
 using System.Windows.Controls;
 using System.Windows.Interop;
@@ -37,7 +38,7 @@ namespace ReceiptScan.Model
 		public Camera()
 		{
 			this.capture = new VideoCapture();
-			capture.Open(0);
+			this.capture.Open(0);
 
 			this.cameraTimer = null;
 		}
@@ -51,10 +52,17 @@ namespace ReceiptScan.Model
 		public Camera(int width, int height, int fps = 60)
 		{
 			this.capture = new VideoCapture();
-			capture.Open(0);
-			capture.FrameWidth = width;
-			capture.FrameHeight = height;
-			capture.Fps = fps;
+
+			this.FrameWidth = width;
+			this.FrameHeight = height;
+			this.Fps = fps;
+
+			if (this.capture.Open(0))
+			{
+				this.capture.FrameWidth = width;
+				this.capture.FrameHeight = height;
+				this.capture.Fps = fps;
+			}
 
 			this.cameraTimer = null;
 		}
@@ -92,17 +100,36 @@ namespace ReceiptScan.Model
 				}
 			}
 		}
+
+		public int Fps { get; protected set; }
+		public int FrameWidth { get; protected set; }
+		public int FrameHeight { get; protected set; }
 		#endregion
 
 		#region Other methods and private properties in calling order
 		/// <summary>
 		/// Start camera.
 		/// </summary>
+		/// <exception cref="InvalidOperationException">The camera can not run.</exception>
 		public void Start()
 		{
+			if (!this.capture.IsOpened())
+			{
+				if (this.capture.Open(0))
+				{
+					this.capture.FrameHeight = this.FrameHeight;
+					this.capture.FrameWidth = this.FrameWidth;
+					this.capture.Fps = this.Fps;
+				}
+				else
+				{
+					throw new InvalidOperationException();
+				}
+			}
+
 			if (null == this.cameraTimer)
 			{
-				int interval = (int)Math.Round((decimal)1000 / Convert.ToInt32(this.capture.Fps));
+				int interval = (int)Math.Round((decimal)1000 / this.Fps);
 				this.cameraTimer = new DispatcherTimer();
 				this.cameraTimer.Interval = new TimeSpan(0, 0, 0, 0, interval);
 				cameraTimer.Tick += new EventHandler(this.CameraTimerDispatcher);
