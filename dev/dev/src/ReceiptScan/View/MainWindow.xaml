@@ -7,7 +7,7 @@
         xmlns:vm="clr-namespace:ReceiptScan.ViewModel"
         mc:Ignorable="d"
         ResizeMode="NoResize"
-        Title="ReceiptScan" Height="800" Width="1500"
+        Title="ReceiptScan" Height="500" Width="680"
         >
     <Window.DataContext>
         <vm:ReceiptScanViewModel/>
@@ -15,26 +15,39 @@
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="1280"/>
+            <ColumnDefinition Width="640"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="720"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="360"/>
             <RowDefinition Height="40"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
+        <Grid x:Name="ButtonGrid"
+              Grid.Row="2"
+              Grid.Column="1"
+              >
+            <Grid.RowDefinitions>
+                <RowDefinition />
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="140"/>
+            </Grid.ColumnDefinitions>
+            <Button x:Name="StartButton"
+                    Grid.Row="1"
+                    Grid.Column="3"
+                    Margin="5"
+                    Content="{Binding ButtonContent}"
+                    Command="{Binding CamereCommand}"
+                />
+        </Grid>
         <Image x:Name="camera_view"
-               Grid.Row="0"
-               Grid.Column="1" Grid.ColumnSpan="5"
+               Grid.Row="1"
+               Grid.Column="1"
                Source="{Binding ImgSource}"
                Margin="0"
                />
-        <Button x:Name="StartButton"
-                Grid.Row="1"
-                Grid.Column="5"
-                Content="{Binding ButtonContent}"
-                Command="{Binding CamereCommand}"
-                />
-
     </Grid>
 </Window>
