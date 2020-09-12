@@ -6,6 +6,8 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Security.Permissions;
 using System.Security.RightsManagement;
 using System.Text;
@@ -29,6 +31,8 @@ namespace ReceiptScan.Model
 		protected VideoCapture capture;
 
 		protected DispatcherTimer cameraTimer;
+
+		protected IEnumerable<IImageDrawer> imageDrawers;
 		#endregion
 
 		#region Constructors and the finalizer
@@ -41,6 +45,7 @@ namespace ReceiptScan.Model
 			this.capture.Open(0);
 
 			this.cameraTimer = null;
+			this.imageDrawers = null;
 		}
 
 		/// <summary>
@@ -65,6 +70,7 @@ namespace ReceiptScan.Model
 			}
 
 			this.cameraTimer = null;
+			this.imageDrawers = null;
 		}
 		#endregion
 
@@ -156,6 +162,11 @@ namespace ReceiptScan.Model
 				return null;
 			}
 
+			foreach (var drawer in this.imageDrawers)
+			{
+				drawer.Draw(ref img);
+			}
+
 			using (var memStream = new MemoryStream())
 			{
 				var bitMap = img.ToBitmap();
@@ -193,6 +204,15 @@ namespace ReceiptScan.Model
 		{
 			var newImgSource = this.Read();
 			this.CameraDataUpdateEvent?.Invoke(this, new CameraEventArags(newImgSource));
+		}
+
+		public void AddDrawer(IImageDrawer drawer)
+		{
+			if (null == this.imageDrawers)
+			{
+				this.imageDrawers = new List<IImageDrawer>();
+			}
+			((List<IImageDrawer>)this.imageDrawers).Add(drawer);
 		}
 		#endregion
 	}

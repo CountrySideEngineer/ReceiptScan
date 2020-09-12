@@ -50,6 +50,8 @@ namespace ReceiptScan.ViewModel
 		public ReceiptScanViewModel()
 		{
 			this.MyCamera = new Camera(640, 360);
+			this.MyCamera.AddDrawer(new TimeTextDrawer());
+
 			this.MyCamera.CameraDataUpdateEvent += this.TimerEvent;
 
 			this.buttonContent = "Start";
